@@ -1,28 +1,32 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react'
+import Login from './components/Login'
+import Chat from './components/Chat'
 
 class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      isAuth: false
+    }
+  }
+  async componentWillMount () {
+    let token = await localStorage.getItem('token')
+    if (token) {
+      this.setState({
+        isAuth:true
+      })
+    }
+  }
+
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+      <div>
+
+        {this.state.isAuth ? <Chat/> : <Login/>}
+
       </div>
-    );
+    )
   }
 }
 
-export default App;
+export default App
