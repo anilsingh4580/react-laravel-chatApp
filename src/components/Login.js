@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Avatar from '@material-ui/core/Avatar';
+import Avatar from '@material-ui/core/Avatar'
 import Button from '@material-ui/core/Button'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import FormControl from '@material-ui/core/FormControl'
@@ -11,6 +11,10 @@ import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
 import withStyles from '@material-ui/core/styles/withStyles'
 
+import { OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRECT, LOGIN_URL } from '../config/env'
+import axios from 'axios'
+
+
 const styles = theme => ({
   layout: {
     width: 'auto',
@@ -20,7 +24,7 @@ const styles = theme => ({
     [theme.breakpoints.up(400 + theme.spacing.unit * 3 * 2)]: {
       width: 400,
       marginLeft: 'auto',
-      marginRight: 'auto',
+      marginRight: 'auto'
     },
   },
   paper: {
@@ -28,18 +32,18 @@ const styles = theme => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: `${theme.spacing.unit * 2}px ${theme.spacing.unit * 3}px ${theme.spacing.unit * 3}px`,
+    padding: `${theme.spacing.unit * 2}px ${theme.spacing.unit * 3}px ${theme.spacing.unit * 3}px`
   },
   avatar: {
     margin: theme.spacing.unit,
-    backgroundColor: theme.palette.secondary.main,
+    backgroundColor: theme.palette.secondary.main
   },
   form: {
-    width: '100%', // Fix IE 11 issue.
-    marginTop: theme.spacing.unit,
+    width: '100%',
+    marginTop: theme.spacing.unit
   },
   submit: {
-    marginTop: theme.spacing.unit * 3,
+    marginTop: theme.spacing.unit * 3
   },
 })
 
@@ -48,15 +52,47 @@ class Login extends React.Component {
     super(props)
     this.state = {
       username:'',
-      password: ''
+      password: '',
+      isLoading: false
     }
   }
 
   handleChange = name => event => {
     this.setState({
-      [name]: event.target.value,
-    });
+      [name]: event.target.value
+    })
   }
+
+  async onSubmitForm() {
+
+    if (!this.state.username || !this.state.password) {
+      return
+    }
+
+    this.setState({
+      isLoading: true
+    })
+
+    try {
+      const data = {
+        grant_type:'password',
+        client_id: OAUTH_CLIENT_ID,
+        client_secret: OAUTH_CLIENT_SECRECT,
+        username:this.state.username,
+        password:this.state.password
+      }
+      let response = await axios.post(LOGIN_URL, data)
+      await localStorage.setItem('token', response.data.access_token)
+      window.location.reload()
+    } catch (error) {
+      alert("Opps somthing went wrong!")
+      console.log(error)
+      this.setState({
+        isLoading: false
+      })
+    }
+  }
+
 
   render() {
     const { classes } = this.props
@@ -96,13 +132,14 @@ class Login extends React.Component {
 
               </FormControl>
               <Button
-                type="submit"
+                type="button"
                 fullWidth
                 variant="contained"
                 color="primary"
                 className={classes.submit}
+                onClick={() => this.onSubmitForm()}
               >
-                Sign in
+                {this.state.isLoading ? 'Loging...' : 'Sign in'}
               </Button>
             </form>
           </Paper>
