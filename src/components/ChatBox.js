@@ -16,6 +16,7 @@ import AttachFileIcon from '@material-ui/icons/AttachFile'
 import axios from 'axios'
 import moment from 'moment'
 
+import debounce from 'lodash/debounce'
 const styles = theme => ({
   root: {
     display: 'flex',
@@ -69,7 +70,8 @@ class ChatBox extends React.Component {
       myName: props.messages[0].myName,
       otherUserName: props.messages[0].otherUserName,
       channelID : props.messages[0].channelID,
-      myFirstKey:  props.messages[0].myFirstKey
+      myFirstKey:  props.messages[0].myFirstKey,
+      isTyping: false
     }
     this.fileInput = React.createRef()
     this.messagesEnd = React.createRef()
@@ -82,7 +84,8 @@ class ChatBox extends React.Component {
       isMe:true,
       message:this.state.message,
       images: this.state.image_show,
-      userKey:this.state.myFirstKey
+      userKey:this.state.myFirstKey,
+      sender_id: this.state.myId
     }
 
     var messages = this.state.messages
@@ -95,6 +98,20 @@ class ChatBox extends React.Component {
     })
   }
 
+  _notTypingHandle = debounce( () => {
+    window.Echo.private(`chat.${this.state.channelID}`)
+      .whisper('typing', {
+        typing: false
+    })
+  }, 1000)
+
+  _typingHandle = debounce( () => {
+    window.Echo.private(`chat.${this.state.channelID}`)
+      .whisper('typing', {
+        typing: true
+    })
+  }, 500)
+
   async _send() {
 
     if (!this.state.message && this.state.image_show.length === 0) {
@@ -106,8 +123,7 @@ class ChatBox extends React.Component {
         images: this.state.image_show
       }
       await this._updatevalue()
-      let response = await axios.post('send_message/'+this.state.channelID, datasend)
-      console.log(response)
+      await axios.post('send_message/'+this.state.channelID, datasend)
     } catch (error) {
       console.log(error)
     }
@@ -116,9 +132,16 @@ class ChatBox extends React.Component {
   _livechat(channelId) {
     window.Echo.private(`chat.${channelId}`)
     .listen('MessageSend', (e) => {
-      console.log(e, 1)
+      if (this.state.myId != e.data.sender_id) {
+        var messages = this.state.messages
+        messages.push(e.data)
+        this.setState({messages})
+        this.messagesEnd.current.scrollTop = this.messagesEnd.current.scrollHeight
+      }
     }).listenForWhisper('typing', (e) => {
-      console.log(e, 2)
+      this.setState({
+        isTyping:e.typing
+      })
     })
   }
 
@@ -157,6 +180,7 @@ class ChatBox extends React.Component {
   render() {
     const { classes } = this.props
 
+
     return (
       <div>
 
@@ -171,7 +195,7 @@ class ChatBox extends React.Component {
                 this.state.image_show.length > 0 ? null : this.state.messages.map((message, index) => (
                   <Fragment key={index}>
                     {
-                      message.isMe ? <ListItem button>
+                      message.sender_id === this.state.myId ? <ListItem button>
                         <Avatar aria-label="Recipe" className={classes.avatar}>
                           {message.userKey}
                         </Avatar>
@@ -185,7 +209,7 @@ class ChatBox extends React.Component {
 
                         <ListItemText className={classes.OtherTime} secondary={moment(message.created_at.date).utcOffset('+05:30').fromNow()} />
                         <ListItemText className={classes.time} secondary={message.message} />
-                        {message.images.length > 0 ? <div >
+                        {message.images.length > 0 ? <div ><br/>
                         <img  src={message.images[0]} alt="Smiley face" height="200" width="200"></img> </div>: null}
                         <Avatar aria-label="Recipe" className={classes.avatar}>
                           {message.userKey}
@@ -201,6 +225,7 @@ class ChatBox extends React.Component {
         </div>
 
         <Card className={classes.card}>
+          {this.state.isTyping ? <ListItemText  secondary={this.state.otherUserName + ' is typing...'} /> : null }
           <Input
               id="message"
               multiline
@@ -208,6 +233,9 @@ class ChatBox extends React.Component {
               className={classes.textinput}
               value={this.state.message}
               onChange={this.handleChange('message')}
+              onKeyDown={(ev)  => this._typingHandle()}
+              onKeyUp={() =>  this._notTypingHandle()}
+
           />
 
           <input style={{display:'none'}} ref={this.fileInput} type="file" onChange={(e) =>  this._onFileChange(e)}/>
