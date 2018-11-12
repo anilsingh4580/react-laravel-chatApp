@@ -52,7 +52,7 @@ class Chat extends React.Component {
     }
   }
 
-  async fetchChatLists() {
+  async _fetchChatLists() {
     this.setState({
       isLoading: true
     })
@@ -102,14 +102,8 @@ class Chat extends React.Component {
     this._allMessages(chatData.channelID)
   }
 
-  _handleChange = name => event => {
-    this.setState({
-      [name]: event.target.value
-    })
-  }
-
   componentWillMount() {
-    this.fetchChatLists()
+    this._fetchChatLists()
   }
 
   render() {

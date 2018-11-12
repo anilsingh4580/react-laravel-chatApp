@@ -20,22 +20,6 @@ const styles = {
 }
 
 class ChatHeader extends React.Component {
-  state = {
-    auth: true,
-    anchorEl: null
-  }
-
-  handleChange = event => {
-    this.setState({ auth: event.target.checked })
-  }
-
-  handleMenu = event => {
-    this.setState({ anchorEl: event.currentTarget })
-  }
-
-  handleClose = () => {
-    this.setState({ anchorEl: null })
-  }
 
   render() {
     const { classes, userName, firstKey } = this.props
@@ -48,12 +32,11 @@ class ChatHeader extends React.Component {
             </Typography>
             <IconButton
               aria-haspopup="true"
-              onClick={this.handleMenu}
               color="inherit"
             >
-            <Avatar aria-label="Recipe" className={classes.avatar}>
-              {firstKey}
-            </Avatar>
+              <Avatar aria-label="Recipe" className={classes.avatar}>
+                {firstKey}
+              </Avatar>
             </IconButton>
           </Toolbar>
         </AppBar>

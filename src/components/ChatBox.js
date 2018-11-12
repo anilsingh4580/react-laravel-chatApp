@@ -123,7 +123,7 @@ class ChatBox extends React.Component {
         images: this.state.image_show
       }
       await this._updatevalue()
-      await axios.post('send_message/'+this.state.channelID, datasend)
+      axios.post('send_message/'+this.state.channelID, datasend)
     } catch (error) {
       console.log(error)
     }
@@ -147,7 +147,6 @@ class ChatBox extends React.Component {
 
   componentWillMount(){
     this._livechat(this.props.messages[0].channelID)
-
   }
 
   componentDidMount() {

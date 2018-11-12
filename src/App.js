@@ -23,8 +23,6 @@ class App extends Component {
   }
 
   async _connection(token) {
-
-
     try {
       window.io = require('socket.io-client')
       window.Echo = new Echo({
